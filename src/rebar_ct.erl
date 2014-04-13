@@ -230,7 +230,8 @@ make_cmd(TestDir, RawLogDir, Config) ->
                       get_ct_config_file(TestDir) ++
                       get_config_file(TestDir) ++
                       get_suites(Config, TestDir) ++
-                      get_case(Config);
+                      get_case(Config) ++
+                      get_ct_erl_args(Config);
               SpecFlags ->
                   ?FMT("~s"
                        " -pa ~s"
@@ -246,7 +247,9 @@ make_cmd(TestDir, RawLogDir, Config) ->
                         LogDir,
                         filename:join(Cwd, TestDir),
                         get_extra_params(Config)]) ++
-                      SpecFlags ++ get_cover_config(Config, Cwd)
+                      SpecFlags ++
+                      get_cover_config(Config, Cwd) ++
+                      get_ct_erl_args(Config)
           end,
     RawLog = filename:join(LogDir, "raw.log"),
     {Cmd, RawLog}.
@@ -268,6 +271,15 @@ get_ct_specs(Cwd) ->
         Specs ->
             " -spec " ++
                 lists:flatten([io_lib:format("~s ", [Spec]) || Spec <- Specs])
+    end.
+
+get_ct_erl_args(Config) ->
+    case rebar_config:get_local(Config, ct_erl_args, undefined) of
+        undefined ->
+            "";
+        ErlArgs ->
+            ?DEBUG("Using user provided erl_args: ~s~n", [ErlArgs]),
+            " -erl_args " ++ ErlArgs
     end.
 
 get_cover_config(Config, Cwd) ->
